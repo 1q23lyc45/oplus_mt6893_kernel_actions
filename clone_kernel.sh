@@ -39,8 +39,8 @@ echo ">>> [3/3] 正在拉取 clang host linux-x86 指定 Commit..."
 mkdir -p kernel_platform/prebuilts-master/clang/host/linux-x86
 cd kernel_platform/prebuilts-master/clang/host/linux-x86
 git init
-git remote add origin https://git.codelinaro.org/clo/la/kernelplatform/prebuilts-master/clang/host/linux-x86.git
-git fetch origin 0fc3d01a780023469b7acc18c56a9cf5099a6d6c --depth=1
+git remote add origin https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86.git
+git fetch origin 3f889f9c9d42bae85728fa89ba5f92a01704fd83 --depth=1
 git checkout FETCH_HEAD
 cd - > /dev/null
 
