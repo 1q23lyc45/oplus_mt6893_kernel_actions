@@ -17,7 +17,7 @@ jobs:
     name: build
     runs-on: ubuntu-24.04
     env:
-      FEIL: 'oplus6893'
+      FEIL: 'oppo6893'
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
@@ -107,60 +107,60 @@ jobs:
           cd kernel_workspace/kernel_platform
 
           echo "tmpfs 优化"
-          echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
           
           echo "启用 BBRv1 网络算法..."
-          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/oppo6893_defconfig
           
           echo "修复 VHE 虚拟化支持..."
-          sed -i 's/[[:space:]]*kvm-arm\.mode=protected//g' ./common/arch/arm64/configs/oplus6893_defconfig
+          sed -i 's/[[:space:]]*kvm-arm\.mode=protected//g' ./common/arch/arm64/configs/oppo6893_defconfig
 
           echo "彻底禁用 SELinux DEVELOP 模式"
-          sed -i '/CONFIG_SECURITY_SELINUX_DEVELOP/d' ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_SECURITY_SELINUX_DEVELOP=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
-          echo "CONFIG_SECURITY_DMESG_RESTRICT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          sed -i '/CONFIG_SECURITY_SELINUX_DEVELOP/d' ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_SECURITY_SELINUX_DEVELOP=n" >> ./common/arch/arm64/configs/oppo6893_defconfig
+          echo "CONFIG_SECURITY_DMESG_RESTRICT=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
 
           if [ "${{ github.event.inputs.ipset }}" == "On" ]; then
             echo "加入 IPSet 增强及相关内核配置..."
-            echo "CONFIG_IP_SET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_MAX=65534" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_BITMAP_IP=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_BITMAP_PORT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_IP=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_IPMARK=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_IPMAC=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_MAC=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_NET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_NETNET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_NETPORT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_SET_LIST_SET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_NETFILTER_XT_SET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_NETFILTER_XT_TARGET_LOG=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_NETFILTER_XT_MATCH_RECENT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP6_NF_NAT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_NET_ACT_CONNMARK=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
-            echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_MAX=65534" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_BITMAP_IP=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_BITMAP_PORT=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IP=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPMARK=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORT=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPMAC=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_MAC=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETNET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETPORT=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_SET_LIST_SET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_NETFILTER_XT_SET=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_NETFILTER_XT_TARGET_LOG=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_NETFILTER_XT_MATCH_RECENT=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP6_NF_NAT=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_NET_ACT_CONNMARK=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
+            echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/oppo6893_defconfig
           fi
           
 
           # 跳过将uapi标准头安装到 usr/include 目录的不必要操作，节省编译时间
-          echo "CONFIG_HEADERS_INSTALL=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_HEADERS_INSTALL=n" >> ./common/arch/arm64/configs/oppo6893_defconfig
 
           echo "内核配置更新完成"
           
@@ -174,7 +174,7 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           git add -A
           git commit -m "auto-commit: remove dirty flag for build $RANDOM" || true
-          make -j$(nproc --all) LLVM_IAS=1 LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out oplus6893_defconfig Image.gz
+          make -j$(nproc --all) LLVM_IAS=1 LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out oppo6893_defconfig Image.gz
           
           ccache -s
           echo "内核编译完成"
