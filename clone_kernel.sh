@@ -11,7 +11,7 @@ echo "=== 开始克隆 ==="
 echo ">>> [1/3] 正在克隆 android_kernel_oneplus_mt6893 到 kernel-4.14..."
 mkdir -p kernel-4.14
 git clone --depth=1 --branch 4.14.186 \
-    https://github.com/1q23lyc45/android_kernel_oneplus_mt6893.git \
+    https://github.com/1q23lyc45/realme_X7max_GTneo_Q3pro-kernel-source.git \
     kernel-4.14
 
 # 创建 Linkfile 软链接
