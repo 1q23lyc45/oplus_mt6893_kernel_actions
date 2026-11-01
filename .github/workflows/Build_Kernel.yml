@@ -11,21 +11,13 @@ on:
           - 'Off'
         default: 'Off'
 
-      UNICODE_BYPASS:
-        description: "是否添加Unicode零宽绕过修复补丁(不推荐开启)"
-        required: true
-        type: choice
-        options:
-          - 'On'
-          - 'Off'
-        default: 'Off'
 
 jobs:
   build:
     name: build
     runs-on: ubuntu-24.04
     env:
-      FEIL: 'oneplus_ace2v_v'
+      FEIL: 'oplus6893'
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
@@ -104,54 +96,8 @@ jobs:
           chmod +x ../clone_kernel.sh
           ../clone_kernel.sh
 
-          rm kernel_platform/common/android/abi_gki_protected_exports_* || echo "No protected exports!"
-          rm -rf kernel_platform/msm-kernel/android/abi_gki_protected_exports_* || echo "No protected exports!"
           echo "内核配置完成"
 
-      - name: "Merge Oplus Config | 合并厂商机型配置文件"
-        run: |
-          echo "正在合并 oplus6983 专属内核配置..."
-          realpath .
-          cd kernel_workspace/kernel_platform/common
-          realpath .
-          ls -al . .. ../..
-          # 1. 定义文件路径变量
-          ROOT_DIR="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform"
-          KERNEL_DIR="common"
-          DEFCONFIG="oplus6983_defconfig"
-
-          # 2. 调用内核自带的 merge_config.sh 脚本进行三方合并
-          KCONFIG_CONFIG="${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/${DEFCONFIG}" \
-          bash "${ROOT_DIR}/${KERNEL_DIR}/scripts/kconfig/merge_config.sh" \
-            -m -r \
-            "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/gki_defconfig" \
-            "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/mgk_64_k510_defconfig" \
-            "${ROOT_DIR}/${KERNEL_DIR}/kernel/configs/oplus6983.config"
-
-          echo "合并完成，正在用生成的厂商配置替换默认的 gki_defconfig..."
-          # 3. 用合并出来的高集成度配置覆盖掉 gki_defconfig，确保后续所有针对 gki_defconfig 的操作直接作用于 oplus6983 配置
-          cp "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/${DEFCONFIG}" \
-             "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/gki_defconfig"
-
-          # 4. 清理临时生成的配置文件
-          rm -f "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/${DEFCONFIG}"
-          
-          echo "厂商配置替换与应用成功！"
-
-      - name: "Setup SecFix | 应用漏洞补丁"
-        run: |
-          cd kernel_workspace/kernel_platform
-          echo "应用补丁..."
-          cd ./common
-          #echo "正在应用 CVE-2026-43499 rtmutex 修复补丁..."
-          #patch -p1 < "$GITHUB_WORKSPACE/security_patch/CVE-2026-64560-wrapper.linux-cleanup.h.diff" || exit 1
-          #patch -p1 < "$GITHUB_WORKSPACE/security_patch/CVE-2026-53163.diff" || exit 1
-
-          if [ "${{ github.event.inputs.UNICODE_BYPASS }}" = "On" ]; then
-            echo "正在应用Unicode零宽绕过修复补丁..."
-            patch -p1 < "$GITHUB_WORKSPACE/security_patch/unicode_bypass_fix510.patch" || exit 1
-          fi
-          echo "所有补丁应用完成"
 
 
       - name: "Configure Kernel Options | 配置内核选项"
@@ -161,69 +107,61 @@ jobs:
           cd kernel_workspace/kernel_platform
 
           echo "tmpfs 优化"
-          echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
           
           echo "启用 BBRv1 网络算法..."
-          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
           
           echo "修复 VHE 虚拟化支持..."
-          sed -i 's/[[:space:]]*kvm-arm\.mode=protected//g' ./common/arch/arm64/configs/gki_defconfig
+          sed -i 's/[[:space:]]*kvm-arm\.mode=protected//g' ./common/arch/arm64/configs/oplus6893_defconfig
 
           echo "彻底禁用 SELinux DEVELOP 模式"
-          sed -i '/CONFIG_SECURITY_SELINUX_DEVELOP/d' ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_SECURITY_SELINUX_DEVELOP=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_SECURITY_DMESG_RESTRICT=y" >> ./common/arch/arm64/configs/gki_defconfig
+          sed -i '/CONFIG_SECURITY_SELINUX_DEVELOP/d' ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_SECURITY_SELINUX_DEVELOP=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
+          echo "CONFIG_SECURITY_DMESG_RESTRICT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
 
           if [ "${{ github.event.inputs.ipset }}" == "On" ]; then
             echo "加入 IPSet 增强及相关内核配置..."
-            echo "CONFIG_IP_SET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_MAX=65534" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_BITMAP_IP=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_BITMAP_PORT=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IP=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPMARK=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORT=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPMAC=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_MAC=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETNET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETPORT=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_LIST_SET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NETFILTER_XT_SET=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NETFILTER_XT_TARGET_LOG=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NETFILTER_XT_MATCH_RECENT=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP6_NF_NAT=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_ACT_CONNMARK=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_IP_SET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_MAX=65534" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_BITMAP_IP=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_BITMAP_PORT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IP=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPMARK=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_IPMAC=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_MAC=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETNET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETPORT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_SET_LIST_SET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_NETFILTER_XT_SET=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_NETFILTER_XT_TARGET_LOG=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_NETFILTER_XT_MATCH_RECENT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP6_NF_NAT=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_NET_ACT_CONNMARK=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
+            echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/oplus6893_defconfig
           fi
           
-          echo "正在配置 lto ..."
-          DEFCONFIG=./common/arch/arm64/configs/gki_defconfig
-          sed -i 's/^CONFIG_LTO=n/CONFIG_LTO=y/' "$DEFCONFIG"
-          sed -i 's/^CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_THIN=y/' "$DEFCONFIG"
-          sed -i 's/^CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_THIN=y/' "$DEFCONFIG"
-          grep -q '^CONFIG_LTO_CLANG_THIN=y' "$DEFCONFIG" || echo 'CONFIG_LTO_CLANG_THIN=y' >> "$DEFCONFIG"
 
           # 跳过将uapi标准头安装到 usr/include 目录的不必要操作，节省编译时间
-          echo "CONFIG_HEADERS_INSTALL=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_HEADERS_INSTALL=n" >> ./common/arch/arm64/configs/oplus6893_defconfig
 
-          echo "Remove check_defconfig"
-          sed -i 's/check_defconfig//' ./common/build.config.gki
           echo "内核配置更新完成"
           
       - name: "Build Kernel | 编译内核"
@@ -236,7 +174,7 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           git add -A
           git commit -m "auto-commit: remove dirty flag for build $RANDOM" || true
-          make -j$(nproc --all) LLVM_IAS=1 LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out gki_defconfig Image.gz
+          make -j$(nproc --all) LLVM_IAS=1 LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out oplus6893_defconfig Image.gz
           
           ccache -s
           echo "内核编译完成"
